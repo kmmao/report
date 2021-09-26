@@ -27,6 +27,9 @@
   </div>
 </template>
 <script>
+import vue from "vue";
+import VueSuperSlide from "vue-superslide";
+vue.use(VueSuperSlide);
 export default {
   props: {
     value: Object,
