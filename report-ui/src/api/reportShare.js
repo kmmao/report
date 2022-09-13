@@ -10,18 +10,34 @@ export function reportShareList(params) {
 
 export function reportShareAdd(data) {
   return request({
-    url: 'report/share',
+    url: 'reportDashboard/share',
+    method: 'post',
+    data
+  })
+}
+
+export function excelShareAdd(data) {
+  return request({
+    url: 'reportExcel/share',
+    method: 'post',
+    data
+  })
+}
+
+export function reportShareDelay(data) {
+  return request({
+    url: 'reportShare/shareDelay',
     method: 'post',
     data
   })
 }
 
 export function reportShareDeleteBatch(data) {
-return request({
-url: 'reportShare/delete/batch',
-method: 'post',
-data
-})
+  return request({
+    url: 'reportShare/delete/batch',
+    method: 'post',
+    data
+  })
 }
 
 export function reportShareUpdate(data) {
@@ -35,7 +51,7 @@ export function reportShareDetail(data) {
   return request({
     url: 'reportShare/' + data.id,
     method: 'get',
-    params: { accessKey: data.accessKey }
+    params: {accessKey: data.accessKey}
   })
 }
 
@@ -43,8 +59,8 @@ export function reportShareDetailByCode(data) {
   return request({
     url: 'reportShare/detailByCode',
     method: 'get',
-    params: { shareCode: data }
+    params: {shareCode: data}
   })
 }
 
-export default { reportShareList, reportShareAdd, reportShareDeleteBatch, reportShareUpdate, reportShareDetail }
+export default {reportShareList, reportShareAdd, reportShareDeleteBatch, reportShareUpdate, reportShareDetail}

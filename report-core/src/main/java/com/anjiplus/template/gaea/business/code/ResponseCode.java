@@ -118,7 +118,8 @@ public interface ResponseCode {
     String FILE_SUFFIX_UNSUPPORTED = "2002";
     String FILE_UPLOAD_ERROR = "2003";
     String FILE_ONT_EXSIT = "2004";
-    String LIST_IS_EMPTY = "2005";
+    String FILE_OPERATION_FAILED = "file.operation.failed";
+
     String PUSHCODE_NEED_UNIQUE = "3001";
     String RECEIVER_IS_EMPTY = "3002";
     String DATA_SOURCE_CONNECTION_FAILED = "4001";
@@ -131,6 +132,7 @@ public interface ResponseCode {
     String SET_CODE_ISEXIST = "4008";
     String SOURCE_CODE_ISEXIST = "4009";
     String CLASS_NOT_FOUND = "4010";
+    String EXECUTE_GROOVY_ERROR = "4011";
 
     String REPORT_SHARE_LINK_INVALID = "report.share.link.invalid";
 

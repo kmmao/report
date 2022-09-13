@@ -106,10 +106,11 @@ export default {
     analysisChartsData(params, data) {
       // widget-barchart 柱线图、widget-linechart 折线图、 widget-barlinechart 柱线图
       // widget-piechart 饼图、widget-funnel 漏斗图
-      // widget-gauge 仪表盘
       // widget-text 文本框
       // widge-table 表格(数据不要转)
       // widget-stackchart 堆叠图
+      // widget-heatmap 热力图
+      // widget-mapline 中国地图-路线图
       const chartType = params.chartType
       if (
         chartType == "widget-barchart" ||
@@ -122,17 +123,19 @@ export default {
         chartType == "widget-funnel"
       ) {
         return this.piechartFn(params.chartProperties, data);
-      } else if (chartType == "widget-gauge") {
-        return this.gaugeFn(params.chartProperties, data);
       } else if (chartType == "widget-text") {
         return this.widgettext(params.chartProperties, data)
       } else if (chartType == "widget-stackchart") {
         return this.stackChartFn(params.chartProperties, data)
+      } else if (chartType == "widget-coord") {
+        return this.coordChartFn(params.chartProperties, data)
+      } else if (chartType == "widget-linemap") {
+        return this.linemapChartFn(params.chartProperties, data)
       } else {
         return data
       }
     },
-    // 柱状图、折线图、折柱图
+    // 柱状图、折线图、柱线图
     barOrLineChartFn(chartProperties, data) {
       const ananysicData = {};
       const xAxisList = [];
@@ -142,6 +145,7 @@ export default {
         const seriesData = [];
         const value = chartProperties[key];
         obj["type"] = value;
+        obj["name"] = key;
         for (let i = 0; i < data.length; i++) {
           if (value.startsWith("xAxis")) {
             // 代表为x轴
@@ -169,22 +173,22 @@ export default {
       //x轴字段、y轴字段名
       const xAxisField = Object.keys(chartProperties)[types.indexOf('xAxis')]
       const yAxisField = Object.keys(chartProperties)[types.indexOf('yAxis')]
+      const dataField = Object.keys(chartProperties)[types.indexOf('bar')]
       //x轴数值去重，y轴去重
       const xAxisList = this.setUnique(data.map(item => item[xAxisField]))
       const yAxisList = this.setUnique(data.map(item => item[yAxisField]))
       const dataGroup = this.setGroupBy(data, yAxisField)
-
       for (const key in chartProperties) {
         if (chartProperties[key] !== 'yAxis' && !chartProperties[key].startsWith('xAxis')) {
           Object.keys(dataGroup).forEach(item => {
-            const data = new Array(yAxisList.length).fill(0)
+            const data = new Array(xAxisList.length).fill(0)
             dataGroup[item].forEach(res => {
-              data[xAxisList.indexOf(res[xAxisField])]= res[key]
+              data[xAxisList.indexOf(res[xAxisField])] = res[key]
             })
             series.push({
               name: yAxisList[item],
               type: chartProperties[key],
-              data,
+              data: data,
             })
           })
         }
@@ -210,25 +214,6 @@ export default {
       }
       return ananysicData;
     },
-    gaugeFn(chartProperties, data) {
-      const ananysicData = [];
-      for (let i = 0; i < data.length; i++) {
-        const obj = {};
-        for (const key in chartProperties) {
-          const value = chartProperties[key];
-          if (value === "name") {
-            obj["name"] = data[i][key];
-          } else {
-            obj["value"] = data[i][key];
-          }
-        }
-        if (!obj["unit"]) {
-          obj["unit"] = "%";
-        }
-        ananysicData.push(obj);
-      }
-      return ananysicData[0];
-    },
     widgettext(chartProperties, data) {
       const ananysicData = [];
       for (let i = 0; i < data.length; i++) {
@@ -236,6 +221,46 @@ export default {
         for (const key in chartProperties) {
           const value = chartProperties[key];
           if (value === "name") {
+          } else {
+            obj["value"] = data[i][key];
+          }
+        }
+        ananysicData.push(obj);
+      }
+      return ananysicData;
+    },
+    // 坐标系数据解析
+    coordChartFn(chartProperties, data) {
+      const ananysicData = {};
+      let series = [];
+      //全部字段字典值
+      const types = Object.values(chartProperties)
+      //x轴字段、y轴字段、数值字段名
+      const xAxisField = Object.keys(chartProperties)[types.indexOf('xAxis')]
+      const yAxisField = Object.keys(chartProperties)[types.indexOf('yAxis')]
+      const dataField = Object.keys(chartProperties)[types.indexOf('series')]
+      //x轴数值去重，y轴去重
+      const xAxisList = this.setUnique(data.map(item => item[xAxisField]))
+      const yAxisList = this.setUnique(data.map(item => item[yAxisField]))
+      ananysicData["xAxis"] = xAxisList;
+      ananysicData["yAxis"] = yAxisList;
+      for (const i in data) {
+        series[i] = [data[i][xAxisField], data[i][yAxisField], data[i][dataField]];
+      }
+      ananysicData["series"] = series;
+      return ananysicData;
+    },
+    // 中国地图。路线图数据解析，适合source、target、value
+    linemapChartFn(chartProperties, data) {
+      const ananysicData = [];
+      for (let i = 0; i < data.length; i++) {
+        const obj = {};
+        for (const key in chartProperties) {
+          const value = chartProperties[key];
+          if (value === "source") {
+            obj["source"] = data[i][key];
+          } else if (value === "target") {
+            obj["target"] = data[i][key];
           } else {
             obj["value"] = data[i][key];
           }

@@ -1,19 +1,13 @@
+<!--
+ * @Descripttion: 用户权限--权限管理
+ * @version: 
+ * @Author: qianlishi
+ * @Date: 2021-12-11 14:48:27
+ * @LastEditors: qianlishi
+ * @LastEditTime: 2022-03-09 09:22:40
+-->
 <template>
-  <anji-crud ref="listPage" :option="crudOption">
-    <template v-slot:buttonLeftOnTable> </template>
-
-    <!--
-        <template slot="rowButton" slot-scope="props">
-            <el-button type="primary" @click="customButtom(props)">行按钮</el-button>
-        </template>
-        -->
-    <!--自定义的卡片插槽，将在编辑详情页面，出现在底部新卡片-->
-    <!--这里可以将自定义的弹出框代码，放入到page中
-        <template v-slot:pageSection>
-          <div>插入底部html片段</div>
-        </template>
-        -->
-  </anji-crud>
+  <anji-crud ref="listPage" :option="crudOption" />
 </template>
 <script>
 import {
@@ -73,6 +67,46 @@ export default {
             field: "actionName"
           }
         ],
+        // 表头按钮
+        tableButtons: [
+          {
+            label: "新增",
+            type: "", // primary、success、info、warning、danger
+            permission: "authorityManage:insert", // 按钮权限码
+            icon: "el-icon-plus",
+            plain: true,
+            click: () => {
+              return this.$refs.listPage.handleOpenEditView("add");
+            }
+          },
+          {
+            label: "删除",
+            type: "danger",
+            permission: "authorityManage:delete",
+            icon: "el-icon-delete",
+            plain: false,
+            click: () => {
+              return this.$refs.listPage.handleDeleteBatch();
+            }
+          }
+        ],
+        // 表格行按钮
+        rowButtons: [
+          {
+            label: "编辑",
+            permission: "authorityManage:update",
+            click: row => {
+              return this.$refs.listPage.handleOpenEditView("edit", row);
+            }
+          },
+          {
+            label: "删除",
+            permission: "authorityManage:delete",
+            click: row => {
+              return this.$refs.listPage.handleDeleteBatch(row);
+            }
+          }
+        ],
         // 操作按钮
         buttons: {
           query: {
@@ -95,9 +129,7 @@ export default {
             api: accessAuthorityUpdate,
             permission: "authorityManage:update"
           },
-          customButton: {
-            operationWidth: "150px"
-          }
+          rowButtonsWidth: 150 // row自定义按钮表格宽度
         },
         // 表格列
         columns: [
@@ -243,9 +275,6 @@ export default {
         ]
       }
     };
-  },
-
-  created() {},
-  methods: {}
+  }
 };
 </script>

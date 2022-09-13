@@ -2,6 +2,8 @@
 package com.anjiplus.template.gaea.business.modules.reportshare.controller.dto;
 
 import java.io.Serializable;
+
+import com.anji.plus.gaea.annotation.Formatter;
 import com.anji.plus.gaea.curd.dto.GaeaBaseDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -52,5 +54,12 @@ public class ReportShareDto extends GaeaBaseDTO implements Serializable {
     /** 0--未删除 1--已删除 DIC_NAME=DELETE_FLAG */
     @ApiModelProperty(value = "0--未删除 1--已删除 DIC_NAME=DELETE_FLAG")
     private Integer deleteFlag;
+
+    /** 分享码 */
+    private String sharePassword;
+
+    private boolean sharePasswordFlag = false;
+
+    private String reportType;
 
 }

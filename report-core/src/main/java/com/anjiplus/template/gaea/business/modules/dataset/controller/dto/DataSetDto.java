@@ -29,6 +29,10 @@ public class DataSetDto extends GaeaBaseDTO implements Serializable {
     /** 数据集描述 */
      private String setDesc;
 
+    /** 数据集类型 */
+    private String setType;
+
+
     /** 数据源编码 */
      private String sourceCode;
 
@@ -54,5 +58,8 @@ public class DataSetDto extends GaeaBaseDTO implements Serializable {
     private Map<String, Object> contextData;
 
     private Set<String> setParamList;
+
+    /**指定字段*/
+    private String fieldLabel;
 
 }

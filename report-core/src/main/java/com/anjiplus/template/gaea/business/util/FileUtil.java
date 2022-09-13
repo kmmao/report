@@ -1,13 +1,14 @@
 package com.anjiplus.template.gaea.business.util;
 
-import com.anji.plus.gaea.code.ResponseCode;
 import com.anji.plus.gaea.exception.BusinessExceptionBuilder;
+import com.anjiplus.template.gaea.business.code.ResponseCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Enumeration;
@@ -41,7 +42,7 @@ public class FileUtil {
             log.info("链接下载图片：{}，临时路径：{}", urlPath, path);
         } catch (IOException e) {
             log.error("根据链接下载失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
@@ -65,14 +66,14 @@ public class FileUtil {
             outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
         } catch (IOException e) {
             log.error("复制文件失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         } finally {
             try {
                 inputChannel.close();
                 outputChannel.close();
             } catch (IOException e) {
                 log.error("", e);
-                throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
             }
         }
     }
@@ -96,14 +97,16 @@ public class FileUtil {
             if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdirs();
             }
-            FileWriter fw = new FileWriter(filePath);
-            BufferedWriter bw = new BufferedWriter(fw);
+            FileOutputStream outputStream = new FileOutputStream(filePath);
+            OutputStreamWriter outputWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            BufferedWriter bw = new BufferedWriter(outputWriter);
             bw.write(content);
             bw.close();
-            fw.close();
+            outputWriter.close();
+            outputStream.close();
         } catch (Exception e) {
             log.error("写入文件失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
@@ -116,9 +119,11 @@ public class FileUtil {
      */
     public static String readFile(File file) {
         BufferedReader reader = null;
+        InputStreamReader isr = null;
         StringBuilder sbf = new StringBuilder();
         try {
-            reader = new BufferedReader(new FileReader(file));
+            isr = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+            reader = new BufferedReader(isr);
             String tempStr;
             while ((tempStr = reader.readLine()) != null) {
                 sbf.append(tempStr);
@@ -127,13 +132,20 @@ public class FileUtil {
             return sbf.toString();
         } catch (IOException e) {
             log.error("读文件失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         } finally {
+            if (null != isr) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
+                }
+            }
             if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e1) {
-                    throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e1.getMessage());
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e1.getMessage());
                 }
             }
         }
@@ -168,19 +180,19 @@ public class FileUtil {
         try {
             out = new FileOutputStream(dstFile);
             CheckedOutputStream cos = new CheckedOutputStream(out, new CRC32());
-            zipOut = new ZipOutputStream(cos);
+            zipOut = new ZipOutputStream(cos, StandardCharsets.UTF_8);
             String baseDir = "";
             compress(srcFile, zipOut, baseDir);
         } catch (IOException e) {
             log.error("压缩文件夹失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         } finally {
             if (null != zipOut) {
                 try {
                     zipOut.close();
                 } catch (IOException e) {
                     log.error("", e);
-                    throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                 }
                 out = null;
             }
@@ -189,7 +201,7 @@ public class FileUtil {
                     out.close();
                 } catch (IOException e) {
                     log.error("", e);
-                    throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                 }
             }
         }
@@ -234,14 +246,14 @@ public class FileUtil {
 
         } catch (IOException e) {
             log.error("压缩文件夹失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         } finally {
             if (null != bis) {
                 try {
                     bis.close();
                 } catch (IOException e) {
                     log.error("", e);
-                    throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                 }
             }
         }
@@ -252,23 +264,26 @@ public class FileUtil {
             decompress(new ZipFile(zipFile), dstPath);
         } catch (IOException e) {
             log.error("", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
     public static void decompress(MultipartFile zipFile, String dstPath) {
         try {
-            File file = new File(dstPath + File.separator + zipFile.getOriginalFilename());
-            if (!file.getParentFile().exists()) {
-                file.getParentFile().mkdirs();
+            File dir = new File(dstPath);
+            if (!dir.exists()){
+                dir.mkdirs();
             }
+            String path = dir.getPath();
+            String absolutePath = dir.getAbsolutePath();
+            File file = new File(dir.getAbsolutePath() + File.separator + zipFile.getOriginalFilename());
             zipFile.transferTo(file);
             decompress(new ZipFile(file), dstPath);
             //解压完删除
             file.delete();
         } catch (IOException e) {
             log.error("", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
@@ -314,14 +329,14 @@ public class FileUtil {
                     }
                 } catch (IOException e) {
                     log.error("解压失败", e);
-                    throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                 } finally {
                     if (null != in) {
                         try {
                             in.close();
                         } catch (IOException e) {
                             log.error("", e);
-                            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                         }
                     }
 
@@ -330,7 +345,7 @@ public class FileUtil {
                             out.close();
                         } catch (IOException e) {
                             log.error("", e);
-                            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+                            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
                         }
                     }
                 }
@@ -338,7 +353,7 @@ public class FileUtil {
             zip.close();
         } catch (IOException e) {
             log.error("解压失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
@@ -359,7 +374,7 @@ public class FileUtil {
             ins.close();
         } catch (Exception e) {
             log.error("获取流文件失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
     }
 
@@ -387,8 +402,49 @@ public class FileUtil {
             });
         } catch (IOException e) {
             log.error("删除文件失败", e);
-            throw BusinessExceptionBuilder.build(ResponseCode.FAIL_CODE, e.getMessage());
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
         }
+    }
+
+    /**
+     * byte 转file
+     */
+    public static File byte2File(byte[] buf, String filePath, String fileName){
+        BufferedOutputStream bos = null;
+        FileOutputStream fos = null;
+        File file = null;
+        try{
+            File dir = new File(filePath);
+            if (!dir.exists()){
+                dir.mkdirs();
+            }
+            file = new File(filePath + File.separator + fileName);
+            fos = new FileOutputStream(file);
+            bos = new BufferedOutputStream(fos);
+            bos.write(buf);
+        }catch (Exception e){
+            log.error("", e);
+            throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
+        }
+        finally{
+            if (bos != null){
+                try{
+                    bos.close();
+                }catch (IOException e){
+                    log.error("", e);
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
+                }
+            }
+            if (fos != null){
+                try{
+                    fos.close();
+                }catch (IOException e){
+                    log.error("", e);
+                    throw BusinessExceptionBuilder.build(ResponseCode.FILE_OPERATION_FAILED, e.getMessage());
+                }
+            }
+        }
+        return file;
     }
 
 

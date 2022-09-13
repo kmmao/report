@@ -7,9 +7,12 @@ import com.anji.plus.gaea.bean.ResponseBean;
 import com.anjiplus.template.gaea.business.modules.dashboard.service.ReportDashboardService;
 import com.anjiplus.template.gaea.business.modules.dashboard.controller.dto.ChartDto;
 import com.anjiplus.template.gaea.business.modules.dashboard.controller.dto.ReportDashboardObjectDto;
+import com.anjiplus.template.gaea.business.modules.reportshare.controller.dto.ReportShareDto;
+import com.anjiplus.template.gaea.business.modules.reportshare.service.ReportShareService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +33,9 @@ public class ReportDashboardController {
 
     @Autowired
     private ReportDashboardService reportDashboardService;
+
+    @Autowired
+    private ReportShareService reportShareService;
 
     /**
      * 预览、查询大屏详情
@@ -74,7 +80,7 @@ public class ReportDashboardController {
      * @return
      */
     @GetMapping("/export")
-    @Permission(code = "view", name = "导出大屏")
+    @Permission(code = "export", name = "导出大屏")
     public ResponseEntity<byte[]> exportDashboard(HttpServletRequest request, HttpServletResponse response,
                                                   @RequestParam("reportCode") String reportCode, @RequestParam(value = "showDataSet",required = false, defaultValue = "1") Integer showDataSet) {
         return reportDashboardService.exportDashboard(request, response, reportCode, showDataSet);
@@ -87,10 +93,17 @@ public class ReportDashboardController {
      * @return
      */
     @PostMapping("/import/{reportCode}")
-    @Permission(code = "design", name = "导入大屏")
+    @Permission(code = "import", name = "导入大屏")
     public ResponseBean importDashboard(@RequestParam("file") MultipartFile file, @PathVariable("reportCode") String reportCode) {
         reportDashboardService.importDashboard(file, reportCode);
         return ResponseBean.builder().build();
+    }
+
+    @PostMapping("/share")
+    @GaeaAuditLog(pageTitle = "分享")
+    @Permission(code = "bigScreenManage", name = "分享报表")
+    public ResponseBean share(@Validated @RequestBody ReportShareDto dto) {
+        return ResponseBean.builder().data(reportShareService.insertShare(dto)).build();
     }
 
 }

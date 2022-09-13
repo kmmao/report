@@ -39,4 +39,12 @@ export function reportDetail(data) {
   })
 }
 
+export function reportCopy(data) {
+  return request({
+    url: '/report/copy',
+    method: 'post',
+    data
+  })
+}
+
 export default { reportList, reportAdd, reportDeleteBatch, reportUpdate, reportDetail }

@@ -1,17 +1,36 @@
 <!--
+ * @Descripttion: 登录
+ * @version:
  * @Author: qianlishi
- * @Date: 2020-07-13 11:04:24
- * @Last Modified by:   qianlishi
- * @Last Modified time: 2020-07-13 11:04:24
- !-->
+ * @Date: 2021-12-11 14:48:27
+ * @LastEditors: qianlishi
+ * @LastEditTime: 2022-06-23 17:23:23
+-->
 <template>
   <div class="login_container">
     <!-- 顶部logo -->
     <div class="login_title">
-      <img src="@/assets/images/home-logo.png" alt="logo" />
+      <div class="left">
+        <div class="box">
+          <img src="../../static/logo-dp.png" alt="" />
+        </div>
+        <div class="name">AJ-Report</div>
+      </div>
+      <div class="right">
+        <div class="item" @click="centerDialogVisible = true">说明</div>
+        <div class="item">
+          <a href="https://ajreport.beliefteam.cn/report-doc/" target="blank"
+            >文档</a
+          >
+        </div>
+        <div class="item">
+          <a href="https://gitee.com/anji-plus/report" target="blank">社区</a>
+        </div>
+      </div>
+      <!-- <img src="@/assets/images/home-logo.png" alt="logo" /> -->
     </div>
     <div class="login_contant">
-      <img src="@/assets/images/login.png" alt="image" class="login_img" />
+      <img src="@/assets/images/login.jpg" alt="image" class="login_img" />
       <el-form
         ref="loginForm"
         :model="loginForm"
@@ -107,6 +126,29 @@
       :img-size="{ width: '400px', height: '200px' }"
       @success="verifylogin"
     />
+
+    <el-dialog
+      title="说明"
+      :visible.sync="centerDialogVisible"
+      width="34%"
+      center
+    >
+      <div style="font-size: 20px; line-height: 50px; margin-bottom: 50px">
+        AJ-Report由<a href="http://www.anji-plus.com/" target="_blank" style="text-decoration: underline"><b>安吉加加信息技术有限公司</b></a
+      >遵循 <a href="http://www.apache.org/licenses/LICENSE-2.0.html" target="_blank" style="text-decoration: underline; word-wrap: break-word"><strong style="color: orangered" >Apache2.0开源协议</strong></a
+      >在<a href="https://gitee.com/explore" target="_blank" style="text-decoration: underline; word-wrap: break-word"><b>Gitee平台</b></a
+      >进行开源。
+      </div>
+      <div style="font-size: 20px; line-height: 50px">
+        <strong> 个人/商业使用须遵循Apache2.0开源协议。</strong>
+        <strong style="color: orangered">禁止将AJ-Report产品用于违法违规业务。</strong>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="centerDialogVisible = false"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -124,23 +166,24 @@ export default {
   },
   data() {
     return {
-      activeTop: "-50%", // 色条滑块控制
-      rememberPsw: false, // 记住密码选择框
+      activeTop: "-50%",
+      rememberPsw: false,
       loginForm: {
         loginName: "",
         password: "",
         verifyCode: ""
-      }, // 登录表单
+      },
       loginRules: {
         loginName: [{ required: true, message: "用户名必填", trigger: "blur" }],
         password: [{ required: true, message: "用户密码必填", trigger: "blur" }]
-      }, // 登录表单验证
-      passwordType: "password", // 用来控制查看密码操作时的输入框类型
-      capsTooltip: false, // 键盘大写是否打开
-      loading: false, // 登录loding
-      redirect: undefined, // 记录重定向地址
-      otherQuery: {}, // 记录重定向地址中的参数
-      needCaptcha: false
+      },
+      passwordType: "password",
+      capsTooltip: false,
+      loading: false,
+      redirect: undefined,
+      otherQuery: {},
+      needCaptcha: false,
+      centerDialogVisible: false
     };
   },
   watch: {
@@ -157,14 +200,16 @@ export default {
     }
   },
   mounted() {
-    // 获取焦点
-    if (this.loginForm.loginName === "") {
-      this.$refs.loginName.focus();
-    } else if (this.loginForm.password === "") {
-      this.$refs.password.focus();
-    }
+    this.handleLoginFocus();
   },
   methods: {
+    handleLoginFocus() {
+      if (this.loginForm.loginName === "") {
+        this.$refs.loginName.focus();
+      } else if (this.loginForm.password === "") {
+        this.$refs.password.focus();
+      }
+    },
     // 获取存储的密码并解密
     getPsw() {
       const cookVal = cookies.get(`u_${this.loginForm.loginName}`);
@@ -224,7 +269,7 @@ export default {
       });
     },
     async loginApi() {
-      let obj = {
+      const obj = {
         loginName: this.loginForm.loginName,
         password: transPsw(this.loginForm.password),
         verifyCode: ""
@@ -269,7 +314,6 @@ export default {
   background: #fff;
 }
 
-/* reset element-ui css */
 .login_container {
   .el-input {
     display: inline-block;
@@ -296,9 +340,6 @@ export default {
   right: 30%;
   transform: translate(50%, -50%);
 }
-</style>
-
-<style lang="scss" scoped>
 .take {
   position: absolute;
   top: 0;
@@ -314,17 +355,53 @@ export default {
     height: 60px;
     padding: 10px 60px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    img {
-      width: 10%;
-      display: block;
+    .left {
+      display: flex;
+      flex-direction: row;
+      .box {
+        width: 40px;
+        height: 40px;
+        margin-top: 6px;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .name {
+        font-size: 20px;
+        font-weight: bold;
+        padding-bottom: 5px;
+        margin-left: 10px;
+        border-left: 1px solid #ccc;
+        padding-top: 14px;
+        padding-left: 10px;
+      }
+      .box1 {
+        width: 100px;
+        margin-left: 40px;
+        cursor: pointer;
+        img {
+          width: 100%;
+          margin-top: 10px;
+          margin-left: 10px;
+        }
+      }
+    }
+    .right {
+      display: flex;
+      flex-direction: row;
+      .item {
+        margin-right: 60px;
+        cursor: pointer;
+      }
     }
   }
   .login_contant {
     position: relative;
     width: 100%;
     height: calc(100% - 60px);
-    // height: 100%;
     .login_img {
       display: block;
       width: 100%;
@@ -423,7 +500,6 @@ export default {
           p {
             padding-left: 8px;
           }
-          // justify-content: space-between;
           & > input {
             position: relative;
             width: 14px;
